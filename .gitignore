@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+env/
+venv*/
+
+# Downloaded InsightFace ONNX models (re-downloaded automatically on first run)
+models/
+
+# Face embedding cache (rebuilt automatically when known_faces/ changes)
+data/embeddings.pkl
+
+# SQLite database (runtime data, not source)
+logs/access.db
+
+# Snapshots saved via the S key
+logs/snapshot_*.jpg
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
