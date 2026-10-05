@@ -84,3 +84,35 @@ LOGS_DISPLAY_ROWS = 20
 
 # Supported image extensions for face registration
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+
+# ─────────────────────────────────────────────
+# Hostel Settings
+# ─────────────────────────────────────────────
+HOSTEL_NAME          = "Block A — Men's Hostel"
+GATE_ID              = "MAIN_GATE_01"
+
+# Curfew time in 24-hour HH:MM format.
+# Any AUTHORIZED entry AFTER this time is logged as a VIOLATION.
+DEFAULT_CURFEW_TIME  = "22:00"
+
+# How many minutes before curfew to show a "Curfew Soon" warning on the HUD
+CURFEW_WARNING_MINS  = 30
+
+# ─────────────────────────────────────────────
+# Door / Lock Simulation
+# ─────────────────────────────────────────────
+# Seconds the gate stays "OPEN" after an AUTHORIZED entry before re-locking
+DOOR_OPEN_DURATION   = 5.0
+
+# ─────────────────────────────────────────────
+# System State File  (shared between camera & dashboard)
+# ─────────────────────────────────────────────
+# JSON file written by the dashboard (lockdown) and read by main.py (gate control)
+SYSTEM_STATE_FILE    = os.path.join(LOGS_DIR, "system_state.json")
+
+# ─────────────────────────────────────────────
+# Dashboard Settings
+# ─────────────────────────────────────────────
+DASHBOARD_REFRESH_SECS  = 3    # auto-refresh interval for Streamlit dashboard
+DASHBOARD_LOG_ROWS      = 50   # rows shown in the access log table
+
