@@ -11,7 +11,8 @@ Hostel-specific business logic:
 import json
 import os
 import threading
-from datetime import datetime, time as dtime
+import time
+from datetime import datetime, date, time as dtime
 from typing import Optional
 
 from config import (
@@ -19,6 +20,8 @@ from config import (
     CURFEW_WARNING_MINS,
     SYSTEM_STATE_FILE,
     LOGS_DIR,
+    ALARM_AUTO_RESET_SECS,
+    ALARM_TRIGGER_EVENTS,
 )
 
 
@@ -26,10 +29,14 @@ from config import (
 # Default system state written when the file doesn't exist yet
 # ─────────────────────────────────────────────────────────────
 _DEFAULT_STATE = {
-    "lockdown":     False,
-    "lockdown_by":  None,
-    "lockdown_at":  None,
-    "gate_status":  "ACTIVE",   # "ACTIVE" | "LOCKED"
+    "lockdown":      False,
+    "lockdown_by":   None,
+    "lockdown_at":   None,
+    "gate_status":   "ACTIVE",    # "ACTIVE" | "LOCKED"
+    "network_mode":  "5G",        # "5G"  | "4G"  (demo toggle)
+    "alarm_active":  False,       # True when security alarm is firing
+    "alarm_at":      None,        # ISO timestamp of last alarm trigger
+    "alarm_reason":  None,        # Human-readable alarm reason string
 }
 
 
@@ -188,3 +195,96 @@ def classify_event(
             return "VIOLATION"
 
     return event
+
+
+# ─────────────────────────────────────────────────────────────
+# Alarm Manager
+# ─────────────────────────────────────────────────────────────
+
+class AlarmManager:
+    """
+    Security alarm state machine.
+
+    The alarm is triggered by DENIED or VIOLATION events and auto-resets
+    after ALARM_AUTO_RESET_SECS if not manually cleared by the warden.
+
+    State is written to SYSTEM_STATE_FILE so the Streamlit dashboard
+    can display the alarm banner and allow the warden to reset it.
+
+    States
+    ──────
+      NORMAL   — no alarm
+      ALERTING — alarm is active (flashing red UI)
+    """
+
+    NORMAL   = "NORMAL"
+    ALERTING = "ALERTING"
+
+    def __init__(self):
+        self._state        = self.NORMAL
+        self._triggered_at = 0.0   # monotonic timestamp
+
+    # ── Public API ────────────────────────────────────────────
+
+    def check_and_trigger(self, event_type: str, name: str = "UNKNOWN"):
+        """
+        Evaluate an event type and trigger the alarm if it is a security event.
+        Writes the updated alarm state to the shared system state file.
+        """
+        if event_type in ALARM_TRIGGER_EVENTS:
+            self._state        = self.ALERTING
+            self._triggered_at = time.monotonic()
+
+            reason = (
+                f"Unknown intruder at gate"
+                if name == "UNKNOWN"
+                else f"Curfew violation — {name}"
+            )
+            state = read_system_state()
+            state["alarm_active"] = True
+            state["alarm_at"]     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            state["alarm_reason"] = reason
+            write_system_state(state)
+
+    def reset(self):
+        """Manually reset the alarm (warden action via dashboard)."""
+        self._state = self.NORMAL
+        state = read_system_state()
+        state["alarm_active"] = False
+        state["alarm_at"]     = None
+        state["alarm_reason"] = None
+        write_system_state(state)
+
+    @property
+    def is_active(self) -> bool:
+        """
+        Returns True if the alarm is currently firing.
+        Automatically resets after ALARM_AUTO_RESET_SECS.
+        """
+        if self._state == self.ALERTING:
+            elapsed = time.monotonic() - self._triggered_at
+            if elapsed >= ALARM_AUTO_RESET_SECS:
+                # Auto-reset expired alarm
+                self._state = self.NORMAL
+                state = read_system_state()
+                state["alarm_active"] = False
+                write_system_state(state)
+                return False
+            return True
+        return False
+
+    @property
+    def flash_state(self) -> int:
+        """
+        Returns 0 or 1 alternating at ~4 Hz — used to drive a flashing visual effect.
+        """
+        return int(time.monotonic() * 4) % 2
+
+
+# ─────────────────────────────────────────────────────────────
+# Network Mode Helpers
+# ─────────────────────────────────────────────────────────────
+
+def get_network_mode() -> str:
+    """Read the current network mode ("5G" | "4G") from the system state file."""
+    return read_system_state().get("network_mode", "5G")

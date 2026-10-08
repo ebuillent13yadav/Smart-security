@@ -2,5 +2,9 @@
   "lockdown": false,
   "lockdown_by": null,
   "lockdown_at": null,
-  "gate_status": "ACTIVE"
+  "gate_status": "ACTIVE",
+  "network_mode": "5G",
+  "alarm_active": false,
+  "alarm_at": null,
+  "alarm_reason": null
 }

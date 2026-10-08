@@ -116,3 +116,19 @@ SYSTEM_STATE_FILE    = os.path.join(LOGS_DIR, "system_state.json")
 DASHBOARD_REFRESH_SECS  = 3    # auto-refresh interval for Streamlit dashboard
 DASHBOARD_LOG_ROWS      = 50   # rows shown in the access log table
 
+# ─────────────────────────────────────────────
+# Network Mode Simulation  (4G vs 5G demo)
+# ─────────────────────────────────────────────
+# Artificial delay injected per frame in 4G mode (seconds).
+# Simulates the ~400-600ms latency of a congested 4G network vs <30ms 5G URLLC.
+NETWORK_4G_DELAY_SECS   = 0.50
+
+# ─────────────────────────────────────────────
+# Alarm Settings
+# ─────────────────────────────────────────────
+# Seconds before the alarm auto-resets without warden intervention
+ALARM_AUTO_RESET_SECS   = 10.0
+
+# Event types that trigger the security alarm
+ALARM_TRIGGER_EVENTS    = {"DENIED", "VIOLATION"}
+

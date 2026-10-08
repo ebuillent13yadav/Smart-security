@@ -4,6 +4,12 @@ __pycache__/
 *$py.class
 *.pyc
 
+# Secrets — NEVER commit your real credentials
+.env
+
+# Alert snapshots (auto-saved, sent to Telegram)
+logs/alert_*.jpg
+
 # Virtual environments
 .venv/
 venv/
